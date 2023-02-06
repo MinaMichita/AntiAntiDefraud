@@ -21,7 +21,8 @@ public class XposedMain implements IXposedHookLoadPackage {
             XposedBridge.log("[[[AntiAntiDefraud]]] Start to hook package " + lpparam.packageName);
 
             // Debug mode flag process
-            final Class<?> guardApplication = XposedHelpers.findClass("com.miui.guardprovider.GuardApplication", lpparam.classLoader);
+            final Class<?> guardApplication = XposedHelpers.findClass("com.miui.guardprovider.GuardApplication",
+                    lpparam.classLoader);
             if (guardApplication != null) {
                 Field[] guardApplicationFields = guardApplication.getDeclaredFields();
                 for (Field field : guardApplicationFields) {
@@ -31,18 +32,19 @@ public class XposedMain implements IXposedHookLoadPackage {
                     }
                     XposedBridge.log("[[[AntiAntiDefraud]]] Warning: GuardProvider debug mode flag not found!");
                 }
-            }else{
-                XposedBridge.log("[[[AntiAntiDefraud]]] Warning: GuardApplication class not found. GuardProvider will not work as debug mode! ");
+            } else {
+                XposedBridge.log(
+                        "[[[AntiAntiDefraud]]] Warning: GuardApplication class not found. GuardProvider will not work as debug mode! ");
             }
 
             // Prevent miui from uploading app list
-            final Class<?> antiDefraudAppManager = XposedHelpers.findClassIfExists("com.miui.guardprovider.engine.mi.antidefraud.AntiDefraudAppManager", lpparam.classLoader);
+            final Class<?> antiDefraudAppManager = XposedHelpers.findClassIfExists(
+                    "com.miui.guardprovider.engine.mi.antidefraud.AntiDefraudAppManager", lpparam.classLoader);
             if (antiDefraudAppManager == null) {
                 XposedBridge.log("[[[AntiAntiDefraud]]] Skip: AntiDefraudAppManager class not found.");
                 return;
-            } else {
-                XposedBridge.log("[[[AntiAntiDefraud]]] Info: AntiDefraudAppManager class found.");
             }
+            XposedBridge.log("[[[AntiAntiDefraud]]] Info: AntiDefraudAppManager class found.");
 
             final Method[] methods = antiDefraudAppManager.getDeclaredMethods();
             Method getAllUnSystemAppsStatus = null;
@@ -55,9 +57,8 @@ public class XposedMain implements IXposedHookLoadPackage {
             if (getAllUnSystemAppsStatus == null) {
                 XposedBridge.log("[[[AntiAntiDefraud]]] Skip: getAllUnSystemAppsStatus method not found.");
                 return;
-            } else {
-                XposedBridge.log("[[[AntiAntiDefraud]]] Info: getAllUnSystemAppsStatus method found.");
             }
+            XposedBridge.log("[[[AntiAntiDefraud]]] Info: getAllUnSystemAppsStatus method found.");
 
             XposedBridge.hookMethod(getAllUnSystemAppsStatus, new XC_MethodHook() {
                 @Override
@@ -68,7 +69,8 @@ public class XposedMain implements IXposedHookLoadPackage {
                     Field[] antiDefraudAppManagerFields = antiDefraudAppManager.getDeclaredFields();
                     for (Field field : antiDefraudAppManagerFields) {
                         if (field.getName().equals("MIUI_VERSION")) {
-                            MIUI_VERSION = (String) XposedHelpers.getStaticObjectField(antiDefraudAppManager, "MIUI_VERSION");
+                            MIUI_VERSION = (String) XposedHelpers.getStaticObjectField(antiDefraudAppManager,
+                                    "MIUI_VERSION");
                         }
                     }
                     if (MIUI_VERSION == null) {
@@ -77,7 +79,7 @@ public class XposedMain implements IXposedHookLoadPackage {
 
                     String uuid = null;
                     final Class<?> uuidHelper = XposedHelpers.findClassIfExists("i.b", lpparam.classLoader);
-                    if(uuidHelper != null){
+                    if (uuidHelper != null) {
                         final Method[] uuidHelperMethods = uuidHelper.getDeclaredMethods();
                         Method getUUID = null;
                         for (Method method : uuidHelperMethods) {
@@ -92,7 +94,7 @@ public class XposedMain implements IXposedHookLoadPackage {
                         } else {
                             XposedBridge.log("[[[AntiAntiDefraud]]] Warning: getUUID method not found.");
                         }
-                    }else{
+                    } else {
                         XposedBridge.log("[[[AntiAntiDefraud]]] Warning: uuidHelper class not found.");
                     }
 
@@ -114,16 +116,21 @@ public class XposedMain implements IXposedHookLoadPackage {
                         Object antiDefraudAppInfo = (Object) list.get(i2);
 
                         Field[] fields = antiDefraudAppInfo.getClass().getDeclaredFields();
-                        for (Field filed : fields) {
-                            filed.setAccessible(true);
-                            if (filed.getName().equals("pkgName")) {
-                                pkgName = (String) filed.get(antiDefraudAppInfo);
-                            } else if (filed.getName().equals("version")) {
-                                version = (String) filed.get(antiDefraudAppInfo);
-                            } else if (filed.getName().equals("sign")) {
-                                sign = (String) filed.get(antiDefraudAppInfo);
-                            } else if (filed.getName().equals("appName")) {
-                                appName = (String) filed.get(antiDefraudAppInfo);
+                        for (Field field : fields) {
+                            field.setAccessible(true);
+                            switch (field.getName()) {
+                                case "pkgName":
+                                    pkgName = (String) filed.get(antiDefraudAppInfo);
+                                    break;
+                                case "version":
+                                    version = (String) filed.get(antiDefraudAppInfo);
+                                    break;
+                                case "sign":
+                                    sign = (String) filed.get(antiDefraudAppInfo);
+                                    break;
+                                case "appName":
+                                    appName = (String) filed.get(antiDefraudAppInfo);
+                                    break;
                             }
                         }
 
