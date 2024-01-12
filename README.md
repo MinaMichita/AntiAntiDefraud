@@ -1,49 +1,51 @@
 # AntiAntiDefraud
 
-Preventing Miui from uploading installed app list.
+Prevent MIUI from uploading your privacy data.
 
 ---
 
-## How Miui collect your privacy?
+## How does MIUI collect your privacy?
 
-Since Miui 14, Miui is keeping sending information that contain uuid from GuardProvider, Miui version and installed app information list to Xiaomi's server without asking user.
+Since version 14 upgrade, MIUI starts to send UUID from `GuardProvider`, MIUI version, installed apps among other information to Xiaomi's server without user's knowledge.
 
-Miui China Mainland version has been tested and confirmed that Xiaomi is collecting user's privacy without asking their users. Xiaomi named this function as AntiDefraud in their code and **these code is also existing in Miui Global version**.
+MIUI Chinese version has been confirmed to collect these data through `AntiDefraud`. **This is also found in the global version**.
 
-Behavior list below will trigger Miui to uploading your installed app list(Tested on Miui China Mainland version):
-* Launch Security - Settings - Security scan - Check for updates(Whether Online definitions is on or off)
-* Force Stop SecurityCenter(Whether Online definitions is on or off)
-* Clear Security app data
+Certain behaviours have been found to trigger data uploading:
+* Go to `Security` - `Settings` - `Security scan`, `Check for updates` (regardless of `Online definitions` option)
+* Force stop `SecurityCenter` (regardless of `Online definitions` option)
+* Clear data of `Security` in `Applications`
 
-## What will this xposed module do?
+## How does AntiAntiFraud protect you?
 
-This xposed module will make GuardProvider work as debug mode and preventing Miui from uploading installed app list and print log with content that Miui want to collect.
+This XPosed module configures `GuardProvider` into debug mode. With that, MIUI no longer uploads your data. This also enables logging function which can be viewed in LSPosed later.
 
-Install this app and active it in lsposed. You can check log in lsposed to confirm is Miui uploading your installed app list.
+To do this, install the module, then activate in LSPosed.
 
-### About Debug mode flag process log
+## Log messages
 
-**Info: GuardProvider will work as debug mode!**  
-That means GuardProvider is working as debug mode and it will print log if GuardProvider is sending your installed app list to Xiaomi's server. Besides, if this appear, you can ignore **Warning: GuardProvider debug mode flag not found!**.  
-You can do a research in logcat(not in lsposed) with keyword **responseDetectApp**, and then you can find log:  
-*W/TAG: responseDetectApp get: {"code":200,"desc":"success","data":[]}*  
-But if this xposed module work correctly, the above log can not be found is normal cause this module will prevent Miui from uploading installed app list.
+### Info: GuardProvider will work as debug mode!
 
-**Info: GuardProvider will work as debug mode!**  
-GuardProvider will not work as debug mode and this means GuardProvider will not print log when it uploads your installed app list.
+This indicates `GuardProvider` have been successfully configured into debug mode. You can safely ignore the subsequent `Warning: GuardProvider debug mode flag not found!`.
 
-### About Prevent miui from uploading app list log
+From this message on, logs will be printed if `GuardProvider` request is intercepted.
 
-**Skip: AntiDefraudAppManager class not found.**  
-**Skip: getAllUnSystemAppsStatus method not found.**  
-That means this module can't find the code will upload your installed app list. It is normal if you are not using Miui 14.  
-But If you are using Miui 14, maybe Xiaomi has edited the code. Maybe Xiaomi has deleted or just renamed to make this module not to work.
+### W/TAG: responseDetectApp get: {"code":200,"desc":"success","data":[]}
 
-**Info: Intercept={"timestamp":"xxx","os":"xxx","biz_id":"virus_scan","uuid":"xxx","content":[]}**  
-That means Miui is trying to upload your installed app list to Xiaomi's server but this module intercepted it. You can check it to know which information is collecting by Xiaomi.
+This message can be found in `logcat` (not LSPosed's `Log`). This is normal, as the module has blocked `GuardProvider` from actually sending anything.
 
-**You can ignore these log:**  
-Warning: Can't get MIUI_VERSION.  
-Warning: uuidHelper class not found.  
-Warning: getUUID method not found.  
-Info: xxxxxx
+### Skip: AntiDefraudAppManager class not found.
+### Skip: getAllUnSystemAppsStatus method not found.
+These two messages indicate failure in finding `GuardProvider` and the module isn't working as expected.
+
+Check your MIUI version. If you're using versions lower than 14, you don't need `AntiAntiFraud`.
+
+If not, this is probably bacause you're using an incompatible version. Please report this to issues.
+
+### Info: Intercept={"timestamp":"xxx","os":"xxx","biz_id":"virus_scan","uuid":"xxx","content":[]}
+This shows actual data upload requests from `GuardProvider`. This is what MIUI wants to collect. The request won't be uploaded, so you can safely ignore this message.
+
+### Warning: Can't get MIUI_VERSION.  
+### Warning: uuidHelper class not found.  
+### Warning: getUUID method not found.  
+### Info: xxxxxx
+You can safely ignore these messages.
